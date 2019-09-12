@@ -7,13 +7,12 @@
 
 /// For more guidance on Substrate modules, see the example module
 /// https://github.com/paritytech/substrate/blob/master/srml/example/src/lib.rs
+use rstd::prelude::*;
+use support::{dispatch::Result, StorageMap, decl_storage, decl_module, decl_event, ensure};
+use system::{self, ensure_signed};
 
-use support::{decl_module, decl_storage, decl_event, StorageValue, dispatch::Result};
-use system::ensure_signed;
-
-/// The module's configuration trait.
+// the module configuration trait
 pub trait Trait: system::Trait {
-	// TODO: Add other types and constants required configure this module.
 
 	/// The overarching event type.
 	type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
@@ -21,37 +20,44 @@ pub trait Trait: system::Trait {
 
 /// This module's storage items.
 decl_storage! {
-	trait Store for Module<T: Trait> as TemplateModule {
-		// Just a dummy storage item. 
-		// Here we are declaring a StorageValue, `Something` as a Option<u32>
-		// `get(something)` is the default getter which returns either the stored `u32` or `None` if nothing stored
-		Something get(something): Option<u32>;
-	}
+  trait Store for Module<T: Trait> as Template {
+    TotalSupply get(total_supply) config(): u64 = 21000000;
+
+    BalanceOf get(balance_of): map T::AccountId => u64;
+  }
 }
 
+// public interface for this runtime module
 decl_module! {
-	/// The module declaration.
-	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-		// Initializing events
-		// this is needed only if you are using events in your module
-		fn deposit_event<T>() = default;
+  pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 
-		// Just a dummy entry point.
-		// function that can be called by the external world as an extrinsics call
-		// takes a parameter of the type `AccountId`, stores it and emits an event
-		pub fn do_something(origin, something: u32) -> Result {
-			// TODO: You only need this if you want to check it was signed.
-			let who = ensure_signed(origin)?;
+      // initialize the token
+      // transfers the total_supply amout to the caller
+      fn init(origin) -> Result {
+        let sender = ensure_signed(origin)?;
+        <BalanceOf<T>>::insert(sender, Self::total_supply());
+        Ok(())
+      }
 
-			// TODO: Code to execute when something calls this.
-			// For example: the following line stores the passed in u32 in the storage
-			<Something<T>>::put(something);
+      // transfer tokens from one account to another
+      fn transfer(_origin, to: T::AccountId, value: u64) -> Result {
+        let sender = ensure_signed(_origin)?;
+        let sender_balance = Self::balance_of(sender.clone());
+        ensure!(sender_balance >= value, "Not enough balance.");
 
-			// here we are raising the Something event
-			Self::deposit_event(RawEvent::SomethingStored(something, who));
-			Ok(())
-		}
-	}
+        let updated_from_balance = sender_balance.checked_sub(value).ok_or("overflow in calculating balance")?;
+        let receiver_balance = Self::balance_of(to.clone());
+        let updated_to_balance = receiver_balance.checked_add(value).ok_or("overflow in calculating balance")?;
+
+        // reduce sender's balance
+        <BalanceOf<T>>::insert(sender, updated_from_balance);
+
+        // increase receiver's balance
+        <BalanceOf<T>>::insert(to.clone(), updated_to_balance);
+
+        Ok(())
+      }
+  }
 }
 
 decl_event!(

@@ -59,6 +59,7 @@ pub type TrieDBMut<'a, H> = trie_db::TrieDBMut<'a, H, NodeCodec<H>>;
 pub type Lookup<'a, H, Q> = trie_db::Lookup<'a, H, NodeCodec<H>, Q>;
 
 /// Determine a trie root given its ordered contents, closed form.
+/// 根据给定的有序的内容生成一个trie root
 pub fn trie_root<H: Hasher, I, A, B>(input: I) -> H::Out where
 	I: IntoIterator<Item = (A, B)>,
 	A: AsRef<[u8]> + Ord,
@@ -68,6 +69,7 @@ pub fn trie_root<H: Hasher, I, A, B>(input: I) -> H::Out where
 }
 
 /// Determine a trie root given a hash DB and delta values.
+/// 根据给定的数据库DB和增加的值delta生成一个新的trie root.
 pub fn delta_trie_root<H: Hasher, I, A, B, DB>(
 	db: &mut DB,
 	mut root: H::Out,
@@ -93,6 +95,7 @@ pub fn delta_trie_root<H: Hasher, I, A, B, DB>(
 }
 
 /// Read a value from the trie.
+/// 从一个trie读出一个key对应的值
 pub fn read_trie_value<H: Hasher, DB: hash_db::HashDBRef<H, trie_db::DBValue>>(
 	db: &DB,
 	root: &H::Out,
@@ -102,6 +105,7 @@ pub fn read_trie_value<H: Hasher, DB: hash_db::HashDBRef<H, trie_db::DBValue>>(
 }
 
 /// Read a value from the trie with given Query.
+/// 通过给定的查询从trie中读取一个值
 pub fn read_trie_value_with<H: Hasher, Q: Query<H, Item=DBValue>, DB: hash_db::HashDBRef<H, trie_db::DBValue>>(
 	db: &DB,
 	root: &H::Out,
@@ -112,6 +116,7 @@ pub fn read_trie_value_with<H: Hasher, Q: Query<H, Item=DBValue>, DB: hash_db::H
 }
 
 /// Determine a trie root node's data given its ordered contents, closed form.
+/// 通过给定有序的内容确定一个trie root 节点的数据
 pub fn unhashed_trie<H: Hasher, I, A, B>(input: I) -> Vec<u8> where
 	I: IntoIterator<Item = (A, B)>,
 	A: AsRef<[u8]> + Ord,
@@ -120,8 +125,8 @@ pub fn unhashed_trie<H: Hasher, I, A, B>(input: I) -> Vec<u8> where
 	trie_root::unhashed_trie::<H, TrieStream, _, _, _>(input)
 }
 
-/// A trie root formed from the items, with keys attached according to their
-/// compact-encoded index (using `parity-codec` crate).
+/// A trie root formed from the items, with keys attached according to their compact-encoded index (using `parity-codec` crate).
+///
 pub fn ordered_trie_root<H: Hasher, I, A>(input: I) -> H::Out
 where
 	I: IntoIterator<Item = A>,

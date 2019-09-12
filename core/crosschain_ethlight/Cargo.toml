@@ -1,0 +1,12 @@
+[package]
+name = "crosschain_ethlight"
+version = "0.1.0"
+authors = ["zk616153275 <geniusreturndevour@foxmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ethereum-types = "0.5"
+ring = "0.14.6"
+kvdb = "0.1"
